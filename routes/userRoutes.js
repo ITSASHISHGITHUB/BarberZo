@@ -3,6 +3,7 @@ const {
   loginController,
   registerController,
   authController,
+  applyBarberController
 } = require("../controllers/userCtrl");
 const authMiddleware = require("../middlewares/authMiddleware");
 
@@ -19,5 +20,8 @@ router.post("/register", registerController);
 
 //Auth || Post
 router.post("/getUserData", authMiddleware , authController);
+
+//Auth || Post
+router.post("/apply-barber", authMiddleware , applyBarberController);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const userModel = require("../models/userModels");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const barberModel = require("../models/barberModel");
 //register callback
 const registerController = async (req, res) => {
   try {
@@ -16,7 +17,7 @@ const registerController = async (req, res) => {
     req.body.password = hashedPassword;
     const newUser = new userModel(req.body);
     await newUser.save();
-    res.status(201).send({ message: "Register Sucessfully", success: true });
+    res.status(201).send({ message: "Register Successfully", success: true });
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -75,7 +76,38 @@ const authController = async (req, res) => {
     });
   }
 };
+const applyBarberController = async (req, res) => {
+  try {
+    const newBarber = await barberModel({ ...req.body, status: "pending" });
+    await newBarber.save();
+    const adminUser = await userModel.findOne({ isAdmin: true });
+    const notification = adminUser.notification;
+    notification.push({
+      type: "apply-barber-request",
+      message: `${newBarber.firstName} ${newBarber.lastName} Has Applied For A Barber Account`,
+      data: {
+        BarberId: newBarber._id,
+        name: newBarber.firstName + " " + newBarber.lastName,
+        onClickPath: "/admin/barber",
+      },
+    });
+    await userModel.findByIdAndUpdate(adminUser._id, { notification: notification });
+    res.status(201).send({
+      success: true,
+      message: "Doctor Account Applied SUccessfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      error,
+      message: "Error While Applying For barber",
+    });
+  }
+};
+
 module.exports = {
   loginController,
   registerController,
-  authController}
+  authController,
+applyBarberController}
